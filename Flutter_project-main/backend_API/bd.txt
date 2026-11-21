@@ -1,0 +1,104 @@
+-- ==========================================
+-- PROYECTO: KOLTSEVAYA LINE
+-- CREACION COMPLETA DE LA BASE DE DATOS
+-- ==========================================
+
+-- 1. ELIMINAR Y CREAR BASE DE DATOS
+
+DROP DATABASE IF EXISTS blog_web;
+
+CREATE DATABASE blog_web
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE blog_web;
+
+-- ==========================================
+-- 2. TABLA: USUARIOS
+-- ==========================================
+
+CREATE TABLE usuarios (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(150) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    rol ENUM('administrador', 'visor')
+        NOT NULL DEFAULT 'visor',
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ==========================================
+-- 3. TABLA: PUBLICACIONES
+-- ==========================================
+
+CREATE TABLE publicaciones (
+    id_publicacion INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL,
+    contenido TEXT NOT NULL,
+    imagen VARCHAR(255) DEFAULT NULL,
+    estado ENUM('borrador', 'publicada')
+        NOT NULL DEFAULT 'publicada',
+    id_autor INT NOT NULL,
+    fecha_publicacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_publicacion_usuario
+    FOREIGN KEY (id_autor)
+    REFERENCES usuarios(id_usuario)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- ==========================================
+-- 4. TABLA: COMENTARIOS
+-- ==========================================
+
+CREATE TABLE comentarios (
+    id_comentario INT AUTO_INCREMENT PRIMARY KEY,
+    comentario TEXT NOT NULL,
+    id_usuario INT NOT NULL,
+    id_publicacion INT NOT NULL,
+    fecha_comentario TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_comentario_usuario
+    FOREIGN KEY (id_usuario)
+    REFERENCES usuarios(id_usuario)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT,
+
+    CONSTRAINT fk_comentario_publicacion
+    FOREIGN KEY (id_publicacion)
+    REFERENCES publicaciones(id_publicacion)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 5. TABLA: CALIFICACIONES
+
+
+CREATE TABLE calificaciones (
+    id_calificacion INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_publicacion INT NOT NULL,
+    calificacion TINYINT UNSIGNED NOT NULL,
+    fecha_calificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_usuario_publicacion
+    UNIQUE (id_usuario, id_publicacion),
+
+    CONSTRAINT chk_calificacion
+    CHECK (calificacion BETWEEN 1 AND 5),
+
+    CONSTRAINT fk_calificacion_usuario
+    FOREIGN KEY (id_usuario)
+    REFERENCES usuarios(id_usuario)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT,
+
+    CONSTRAINT fk_calificacion_publicacion
+    FOREIGN KEY (id_publicacion)
+    REFERENCES publicaciones(id_publicacion)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+
+    INDEX idx_calificacion_publicacion (id_publicacion)
+) ENGINE=InnoDB;
